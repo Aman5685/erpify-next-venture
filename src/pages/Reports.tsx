@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
@@ -10,8 +9,35 @@ import { Button } from '@/components/ui/button';
 import { Download, FileText, Printer, Share2 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger,
+  SheetFooter
+} from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const monthlySalesData = [
+type SalesData = {
+  month: string;
+  sales: number;
+};
+
+type ProductData = {
+  name: string;
+  value: number;
+};
+
+type CustomerData = {
+  month: string;
+  customers: number;
+};
+
+type ReportType = 'sales' | 'products' | 'customers';
+
+const monthlySalesData: SalesData[] = [
   { month: 'Jan', sales: 4000 },
   { month: 'Feb', sales: 3000 },
   { month: 'Mar', sales: 5000 },
@@ -26,7 +52,7 @@ const monthlySalesData = [
   { month: 'Dec', sales: 5000 },
 ];
 
-const productSalesData = [
+const productSalesData: ProductData[] = [
   { name: 'Product A', value: 400 },
   { name: 'Product B', value: 300 },
   { name: 'Product C', value: 300 },
@@ -34,7 +60,7 @@ const productSalesData = [
   { name: 'Other', value: 100 },
 ];
 
-const customerGrowthData = [
+const customerGrowthData: CustomerData[] = [
   { month: 'Jan', customers: 100 },
   { month: 'Feb', customers: 120 },
   { month: 'Mar', customers: 150 },
@@ -53,8 +79,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const Reports = () => {
   const { toast } = useToast();
-  const [activeReport, setActiveReport] = useState('sales');
+  const [activeReport, setActiveReport] = useState<ReportType>('sales');
   const reportRef = useRef<HTMLDivElement>(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const exportToPDF = () => {
     if (reportRef.current) {
@@ -88,10 +115,13 @@ const Reports = () => {
   };
 
   const exportToCSV = () => {
-    let data = monthlySalesData;
-    let headers = ['Month', 'Sales'];
+    let data: any[] = [];
+    let headers: string[] = [];
     
-    if (activeReport === 'products') {
+    if (activeReport === 'sales') {
+      data = monthlySalesData;
+      headers = ['Month', 'Sales'];
+    } else if (activeReport === 'products') {
       data = productSalesData;
       headers = ['Product', 'Value'];
     } else if (activeReport === 'customers') {
@@ -103,11 +133,11 @@ const Reports = () => {
     
     data.forEach(item => {
       if (activeReport === 'sales') {
-        csvContent += `${item.month},${item.sales}\n`;
+        csvContent += `${(item as SalesData).month},${(item as SalesData).sales}\n`;
       } else if (activeReport === 'products') {
-        csvContent += `${item.name},${item.value}\n`;
+        csvContent += `${(item as ProductData).name},${(item as ProductData).value}\n`;
       } else if (activeReport === 'customers') {
-        csvContent += `${item.month},${item.customers}\n`;
+        csvContent += `${(item as CustomerData).month},${(item as CustomerData).customers}\n`;
       }
     });
 
@@ -135,7 +165,24 @@ const Reports = () => {
     window.print();
   };
 
-  const handleShare = async () => {
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Link Copied",
+        description: "Report link copied to clipboard",
+      });
+      setIsShareOpen(false);
+    } catch (err) {
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy the link",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareNative = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
@@ -148,6 +195,7 @@ const Reports = () => {
           title: "Shared Successfully",
           description: "Your report has been shared",
         });
+        setIsShareOpen(false);
       } catch (error) {
         toast({
           title: "Share Failed",
@@ -157,12 +205,20 @@ const Reports = () => {
         console.error('Error sharing:', error);
       }
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link Copied",
-        description: "Report link copied to clipboard",
-      });
+      copyToClipboard(window.location.href);
     }
+  };
+
+  const handleShareEmail = () => {
+    const subject = encodeURIComponent(`${getReportTitle()} Report`);
+    const body = encodeURIComponent(`Check out this ${getReportTitle().toLowerCase()} report: ${window.location.href}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    setIsShareOpen(false);
+    
+    toast({
+      title: "Email Prepared",
+      description: "Email client opened with report link",
+    });
   };
 
   const getReportTitle = () => {
@@ -206,16 +262,52 @@ const Reports = () => {
                 <Printer size={16} className="mr-1" />
                 Print
               </Button>
-              <Button variant="outline" onClick={handleShare} size="sm">
-                <Share2 size={16} className="mr-1" />
-                Share
-              </Button>
+              
+              <Popover open={isShareOpen} onOpenChange={setIsShareOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Share2 size={16} className="mr-1" />
+                    Share
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-0" align="end">
+                  <div className="p-2">
+                    <p className="text-sm text-muted-foreground px-2 pt-2 pb-1">Share this report</p>
+                    <div className="grid gap-1">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start" 
+                        onClick={handleShareNative}
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        <span>Share via Device</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start" 
+                        onClick={handleShareEmail}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        <span>Email</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start" 
+                        onClick={() => copyToClipboard(window.location.href)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        <span>Copy Link</span>
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </header>
         
         <div ref={reportRef}>
-          <Tabs defaultValue="sales" value={activeReport} onValueChange={setActiveReport} className="space-y-4">
+          <Tabs defaultValue="sales" value={activeReport} onValueChange={(value) => setActiveReport(value as ReportType)} className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="sales">Sales Reports</TabsTrigger>
               <TabsTrigger value="products">Product Reports</TabsTrigger>
