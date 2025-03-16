@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import PageTransition from '@/components/ui/PageTransition';
@@ -8,8 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Download, FileText, Printer, Share2 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
-// Sample sales data
 const monthlySalesData = [
   { month: 'Jan', sales: 4000 },
   { month: 'Feb', sales: 3000 },
@@ -25,7 +25,6 @@ const monthlySalesData = [
   { month: 'Dec', sales: 5000 },
 ];
 
-// Sample product data
 const productSalesData = [
   { name: 'Product A', value: 400 },
   { name: 'Product B', value: 300 },
@@ -34,7 +33,6 @@ const productSalesData = [
   { name: 'Other', value: 100 },
 ];
 
-// Sample customer data
 const customerGrowthData = [
   { month: 'Jan', customers: 100 },
   { month: 'Feb', customers: 120 },
@@ -55,19 +53,132 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 const Reports = () => {
   const { toast } = useToast();
   const [activeReport, setActiveReport] = useState('sales');
+  const reportRef = useRef<HTMLDivElement>(null);
 
-  const handleExport = (format: string) => {
+  const exportToPDF = () => {
+    if (reportRef.current) {
+      toast({
+        title: "Preparing PDF",
+        description: "Please wait while we generate your PDF",
+      });
+
+      html2canvas(reportRef.current).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('landscape', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio) / 2;
+        const imgY = 30;
+
+        pdf.setFontSize(18);
+        pdf.text(`${getReportTitle()} Report`, pdfWidth / 2, 20, { align: 'center' });
+        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+        pdf.save(`${getReportTitle().toLowerCase()}_report.pdf`);
+
+        toast({
+          title: "PDF Exported",
+          description: "Your report has been exported as a PDF",
+        });
+      });
+    }
+  };
+
+  const exportToCSV = () => {
+    let data = monthlySalesData;
+    let headers = ['Month', 'Sales'];
+    
+    if (activeReport === 'products') {
+      data = productSalesData;
+      headers = ['Product', 'Value'];
+    } else if (activeReport === 'customers') {
+      data = customerGrowthData;
+      headers = ['Month', 'Customers'];
+    }
+
+    let csvContent = headers.join(',') + '\n';
+    
+    data.forEach(item => {
+      if (activeReport === 'sales') {
+        csvContent += `${item.month},${item.sales}\n`;
+      } else if (activeReport === 'products') {
+        csvContent += `${item.name},${item.value}\n`;
+      } else if (activeReport === 'customers') {
+        csvContent += `${item.month},${item.customers}\n`;
+      }
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${getReportTitle().toLowerCase()}_report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
-      title: `Report Exported`,
-      description: `Report has been exported as ${format}`,
+      title: "CSV Exported",
+      description: "Your report has been exported as a CSV file",
     });
   };
 
   const handlePrint = () => {
     toast({
-      title: "Printing Report",
-      description: "Sending report to printer",
+      title: "Preparing Print",
+      description: "Opening print dialog...",
     });
+    
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${getReportTitle()} Report`,
+          text: `Check out this ${getReportTitle().toLowerCase()} report from our dashboard.`,
+          url: window.location.href,
+        });
+        
+        toast({
+          title: "Shared Successfully",
+          description: "Your report has been shared",
+        });
+      } catch (error) {
+        toast({
+          title: "Share Failed",
+          description: "Could not share the report",
+          variant: "destructive",
+        });
+        console.error('Error sharing:', error);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Report link copied to clipboard",
+      });
+    }
+  };
+
+  const getReportTitle = () => {
+    switch (activeReport) {
+      case 'sales': return 'Sales';
+      case 'products': return 'Product';
+      case 'customers': return 'Customer';
+      default: return 'Sales';
+    }
+  };
+
+  const handleExport = (format: string) => {
+    if (format === 'PDF') {
+      exportToPDF();
+    } else if (format === 'CSV') {
+      exportToCSV();
+    }
   };
 
   return (
@@ -94,7 +205,7 @@ const Reports = () => {
                 <Printer size={16} className="mr-1" />
                 Print
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" onClick={handleShare} size="sm">
                 <Share2 size={16} className="mr-1" />
                 Share
               </Button>
@@ -102,112 +213,65 @@ const Reports = () => {
           </div>
         </header>
         
-        <Tabs defaultValue="sales" value={activeReport} onValueChange={setActiveReport} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="sales">Sales Reports</TabsTrigger>
-            <TabsTrigger value="products">Product Reports</TabsTrigger>
-            <TabsTrigger value="customers">Customer Reports</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="sales" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Sales Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      width={500}
-                      height={300}
-                      data={monthlySalesData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="sales" fill="#8884d8" name="Sales ($)" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="products" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Sales Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart width={400} height={400}>
-                      <Pie
-                        data={productSalesData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        outerRadius={120}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+        <div ref={reportRef}>
+          <Tabs defaultValue="sales" value={activeReport} onValueChange={setActiveReport} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="sales">Sales Reports</TabsTrigger>
+              <TabsTrigger value="products">Product Reports</TabsTrigger>
+              <TabsTrigger value="customers">Customer Reports</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="sales" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Sales Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        width={500}
+                        height={300}
+                        data={monthlySalesData}
+                        margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
                       >
-                        {productSalesData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="customers" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Growth</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      width={500}
-                      height={300}
-                      data={customerGrowthData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="customers" stroke="#82ca9d" activeDot={{ r: 8 }} name="Total Customers" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </PageTransition>
-    </div>
-  );
-};
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="sales" fill="#8884d8" name="Sales ($)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="products" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Sales Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart width={400} height={400}>
+                        <Pie
+                          data={productSalesData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          outerRadius={120}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {productSalesData.map((entry, index) => (
+                            <Cell
 
-export default Reports;
