@@ -4,9 +4,10 @@ import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import PageTransition from '@/components/ui/PageTransition';
 import CustomersTable from '@/components/Customers/CustomersTable';
+import { Customer } from '@/components/Customers/CustomersTable';
 
 // Sample customer data
-const sampleCustomers = [
+const sampleCustomers: Customer[] = [
   { 
     id: '1', 
     name: 'Acme Corporation', 
@@ -61,9 +62,9 @@ const sampleCustomers = [
 
 const Customers = () => {
   const { toast } = useToast();
-  const [customers, setCustomers] = useState(sampleCustomers);
+  const [customers, setCustomers] = useState<Customer[]>(sampleCustomers);
 
-  const handleEdit = (customer: any) => {
+  const handleEdit = (customer: Customer) => {
     toast({
       title: "Edit Customer",
       description: `Editing ${customer.name}`,
