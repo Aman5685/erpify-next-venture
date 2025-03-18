@@ -37,6 +37,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const html = document.documentElement;
       html.className = html.className.replace(/bg-gradient-\w+/g, '').trim();
       html.classList.add(savedTheme);
+    } else {
+      // If no saved theme, set default to bg-gradient-main
+      setBgTheme('bg-gradient-main');
+      localStorage.setItem('bgTheme', 'bg-gradient-main');
+      document.documentElement.classList.add('bg-gradient-main');
     }
   }, []);
 
