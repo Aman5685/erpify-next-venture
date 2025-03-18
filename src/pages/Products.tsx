@@ -1,102 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import PageTransition from '@/components/ui/PageTransition';
 import Layout from '@/components/Layout';
-import ProductsTable, { Product } from '@/components/Products/ProductsTable';
+import ProductsTable from '@/components/Products/ProductsTable';
 import ProductsFilter from '@/components/Products/ProductsFilter';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// Sample product data
-const initialProducts: Product[] = [
-  {
-    id: "1",
-    name: "Ergonomic Office Chair",
-    sku: "CHAIR-001",
-    category: "Furniture",
-    price: 299.99,
-    stock: 45,
-    status: "In Stock"
-  },
-  {
-    id: "2",
-    name: "Laptop Docking Station",
-    sku: "DOCK-002",
-    category: "Electronics",
-    price: 149.99,
-    stock: 28,
-    status: "In Stock"
-  },
-  {
-    id: "3",
-    name: "Wireless Mouse",
-    sku: "MOUSE-003",
-    category: "Accessories",
-    price: 49.99,
-    stock: 12,
-    status: "Low Stock"
-  },
-  {
-    id: "4",
-    name: "Monitor Stand",
-    sku: "STAND-004",
-    category: "Accessories",
-    price: 79.99,
-    stock: 0,
-    status: "Out of Stock"
-  },
-  {
-    id: "5",
-    name: "Mechanical Keyboard",
-    sku: "KEY-005",
-    category: "Electronics",
-    price: 129.99,
-    stock: 32,
-    status: "In Stock"
-  },
-  {
-    id: "6",
-    name: "USB-C Hub",
-    sku: "HUB-006",
-    category: "Electronics",
-    price: 69.99,
-    stock: 8,
-    status: "Low Stock"
-  },
-  {
-    id: "7",
-    name: "Office Desk",
-    sku: "DESK-007",
-    category: "Furniture",
-    price: 399.99,
-    stock: 15,
-    status: "In Stock"
-  },
-  {
-    id: "8",
-    name: "Desk Lamp",
-    sku: "LAMP-008",
-    category: "Furniture",
-    price: 59.99,
-    stock: 24,
-    status: "In Stock"
-  }
-];
+import AddProductDialog from '@/components/Products/AddProductDialog';
+import EditProductDialog from '@/components/Products/EditProductDialog';
+import DeleteProductDialog from '@/components/Products/DeleteProductDialog';
+import { Product, ProductFormData } from '@/components/Products/types';
+import { initialProducts, createProductFromForm, updateProductFromForm } from '@/components/Products/productUtils';
 
 const Products = () => {
   const { toast } = useToast();
@@ -106,7 +19,7 @@ const Products = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     sku: '',
     category: '',
@@ -198,18 +111,7 @@ const Products = () => {
 
   // Save a new product
   const handleSaveNewProduct = () => {
-    const stockNum = parseInt(formData.stock, 10);
-    
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      name: formData.name,
-      sku: formData.sku,
-      category: formData.category,
-      price: parseFloat(formData.price),
-      stock: stockNum,
-      status: stockNum > 20 ? 'In Stock' : stockNum > 0 ? 'Low Stock' : 'Out of Stock',
-    };
-    
+    const newProduct = createProductFromForm(formData);
     setProducts([...products, newProduct]);
     setIsAddDialogOpen(false);
     
@@ -223,17 +125,7 @@ const Products = () => {
   const handleUpdateProduct = () => {
     if (!selectedProduct) return;
     
-    const stockNum = parseInt(formData.stock, 10);
-    
-    const updatedProduct: Product = {
-      ...selectedProduct,
-      name: formData.name,
-      sku: formData.sku,
-      category: formData.category,
-      price: parseFloat(formData.price),
-      stock: stockNum,
-      status: stockNum > 20 ? 'In Stock' : stockNum > 0 ? 'Low Stock' : 'Out of Stock',
-    };
+    const updatedProduct = updateProductFromForm(selectedProduct, formData);
     
     setProducts(products.map(p => p.id === selectedProduct.id ? updatedProduct : p));
     setIsEditDialogOpen(false);
@@ -287,162 +179,29 @@ const Products = () => {
         />
       </PageTransition>
       
-      {/* Add Product Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Add new product</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Product Name</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleInputChange} 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input 
-                  id="sku" 
-                  name="sku" 
-                  value={formData.sku} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
-                <Input 
-                  id="category" 
-                  name="category" 
-                  value={formData.category} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="price">Price ($)</Label>
-                <Input 
-                  id="price" 
-                  name="price" 
-                  type="number" 
-                  value={formData.price} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="stock">Stock</Label>
-                <Input 
-                  id="stock" 
-                  name="stock" 
-                  type="number" 
-                  value={formData.stock} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveNewProduct}>Add Product</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Product Dialogs */}
+      <AddProductDialog 
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onSave={handleSaveNewProduct}
+      />
       
-      {/* Edit Product Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Edit product</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Product Name</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleInputChange} 
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input 
-                  id="sku" 
-                  name="sku" 
-                  value={formData.sku} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
-                <Input 
-                  id="category" 
-                  name="category" 
-                  value={formData.category} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="price">Price ($)</Label>
-                <Input 
-                  id="price" 
-                  name="price" 
-                  type="number" 
-                  value={formData.price} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="stock">Stock</Label>
-                <Input 
-                  id="stock" 
-                  name="stock" 
-                  type="number" 
-                  value={formData.stock} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateProduct}>Update Product</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditProductDialog 
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onUpdate={handleUpdateProduct}
+      />
       
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Are you sure you want to delete <span className="font-medium">{selectedProduct?.name}</span>?</p>
-            <p className="text-sm text-muted-foreground mt-2">This action cannot be undone.</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteProduct}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteProductDialog 
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        product={selectedProduct}
+        onDelete={handleDeleteProduct}
+      />
     </Layout>
   );
 };

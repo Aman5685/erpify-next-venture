@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Table, 
@@ -18,16 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Search, Filter, PlusCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-export type Product = {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-};
+import { Product } from './types';
 
 interface ProductsTableProps {
   products: Product[];
