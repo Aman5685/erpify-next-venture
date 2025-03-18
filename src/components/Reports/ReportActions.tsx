@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Printer, Share2 } from 'lucide-react';
+import { Download, FileText, Printer, Share2, Mail } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useToast } from '@/components/ui/use-toast';
 
 interface ReportActionsProps {
   onExport: (format: 'PDF' | 'CSV') => void;
@@ -14,6 +13,7 @@ interface ReportActionsProps {
   onShareNative: () => void;
   onShareEmail: () => void;
   onCopyLink: (url: string) => void;
+  onOpenEmailDialog: () => void;
 }
 
 const ReportActions: React.FC<ReportActionsProps> = ({
@@ -24,7 +24,8 @@ const ReportActions: React.FC<ReportActionsProps> = ({
   setIsShareOpen,
   onShareNative,
   onShareEmail,
-  onCopyLink
+  onCopyLink,
+  onOpenEmailDialog
 }) => {
   return (
     <div className="flex items-center space-x-2">
@@ -63,10 +64,18 @@ const ReportActions: React.FC<ReportActionsProps> = ({
               <Button 
                 variant="ghost" 
                 className="w-full justify-start" 
+                onClick={onOpenEmailDialog}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                <span>Email to Someone</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
                 onClick={onShareEmail}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                <span>Email</span>
+                <span>Email Client</span>
               </Button>
               <Button 
                 variant="ghost" 

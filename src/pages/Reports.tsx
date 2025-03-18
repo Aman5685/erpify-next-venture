@@ -4,12 +4,14 @@ import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import PageTransition from '@/components/ui/PageTransition';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { z } from 'zod';
 
 // Import refactored components
 import SalesChart from '@/components/Reports/charts/SalesChart';
 import ProductChart from '@/components/Reports/charts/ProductChart';
 import CustomerChart from '@/components/Reports/charts/CustomerChart';
 import ReportActions from '@/components/Reports/ReportActions';
+import EmailReportDialog from '@/components/Reports/EmailReportDialog';
 
 // Import utilities and data
 import { 
@@ -30,11 +32,20 @@ import {
   getReportTitle
 } from '@/components/Reports/reportUtils';
 
+const EmailFormSchema = z.object({
+  email: z.string().email(),
+  subject: z.string().min(3),
+  message: z.string().optional(),
+});
+
+type EmailFormValues = z.infer<typeof EmailFormSchema>;
+
 const Reports = () => {
   const { toast } = useToast();
   const [activeReport, setActiveReport] = useState<ReportType>('sales');
   const reportRef = useRef<HTMLDivElement>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
 
   const handleExport = (format: 'PDF' | 'CSV') => {
     if (format === 'PDF') {
@@ -75,6 +86,24 @@ const Reports = () => {
     await copyToClipboard(text, toast, setIsShareOpen);
   };
 
+  const handleSendEmail = (values: EmailFormValues) => {
+    // In a real application, this would connect to a backend API
+    // to send the email. For now, we'll simulate the email sending.
+    console.log('Sending email:', values);
+    
+    toast({
+      title: "Email Sent",
+      description: `Report sent to ${values.email}`,
+    });
+    
+    setIsEmailDialogOpen(false);
+    setIsShareOpen(false);
+  };
+
+  const openEmailDialog = () => {
+    setIsEmailDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -95,6 +124,7 @@ const Reports = () => {
               onShareNative={handleShareNative_}
               onShareEmail={handleShareEmail_}
               onCopyLink={copyToClipboard_}
+              onOpenEmailDialog={openEmailDialog}
             />
           </div>
         </header>
@@ -121,6 +151,14 @@ const Reports = () => {
           </Tabs>
         </div>
       </PageTransition>
+
+      <EmailReportDialog
+        open={isEmailDialogOpen}
+        onOpenChange={setIsEmailDialogOpen}
+        reportTitle={getReportTitle(activeReport)}
+        reportUrl={window.location.href}
+        onSendEmail={handleSendEmail}
+      />
     </div>
   );
 };
