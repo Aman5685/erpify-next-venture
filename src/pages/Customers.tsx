@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import Navbar from '@/components/Navbar';
+import Layout from '@/components/Layout';
 import PageTransition from '@/components/ui/PageTransition';
 import CustomersTable from '@/components/Customers/CustomersTable';
+import CustomersFilter from '@/components/Customers/CustomersFilter';
 import { Customer } from '@/components/Customers/CustomersTable';
 
 // Sample customer data
@@ -63,6 +64,39 @@ const sampleCustomers: Customer[] = [
 const Customers = () => {
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>(sampleCustomers);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>(sampleCustomers);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  
+  // Apply filters
+  useEffect(() => {
+    let result = customers;
+    
+    // Apply search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(customer => 
+        customer.name.toLowerCase().includes(search) || 
+        customer.email.toLowerCase().includes(search) ||
+        customer.phone.includes(search)
+      );
+    }
+    
+    // Apply status filter
+    if (statusFilter) {
+      result = result.filter(customer => customer.status === statusFilter);
+    }
+    
+    setFilteredCustomers(result);
+  }, [customers, searchTerm, statusFilter]);
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+  };
 
   const handleEdit = (customer: Customer) => {
     toast({
@@ -88,9 +122,7 @@ const Customers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
+    <Layout>
       <PageTransition className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <header className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -101,14 +133,22 @@ const Customers = () => {
           </div>
         </header>
         
+        <CustomersFilter 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          onResetFilters={handleResetFilters}
+        />
+        
         <CustomersTable 
-          customers={customers}
+          customers={filteredCustomers}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onAdd={handleAdd}
         />
       </PageTransition>
-    </div>
+    </Layout>
   );
 };
 

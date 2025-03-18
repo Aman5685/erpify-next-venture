@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import Navbar from '@/components/Navbar';
+import Layout from '@/components/Layout';
 import PageTransition from '@/components/ui/PageTransition';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,14 +11,53 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTheme } from '@/contexts/ThemeContext';
+import { CompanyInfo, SystemPreferences, saveCompanyInfo, getCompanyInfo, saveSystemPreferences, getSystemPreferences } from '@/services/settingsService';
 
 const Settings = () => {
   const { toast } = useToast();
+  const { bgTheme, changeBgTheme } = useTheme();
+  
+  // Company Info state
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(getCompanyInfo());
+  
+  // System Preferences state
+  const [systemPreferences, setSystemPreferences] = useState<SystemPreferences>(getSystemPreferences());
+  
+  // Handle input changes for company info
+  const handleCompanyInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCompanyInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Handle system preferences changes
+  const handleSystemPreferenceChange = (key: keyof SystemPreferences, value: string) => {
+    setSystemPreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
   
   const handleSaveGeneral = () => {
+    // Save company info
+    saveCompanyInfo(companyInfo);
+    
     toast({
       title: "General settings saved",
       description: "Your settings have been updated successfully.",
+    });
+  };
+  
+  const handleSavePreferences = () => {
+    // Save system preferences
+    saveSystemPreferences(systemPreferences);
+    
+    toast({
+      title: "System preferences saved",
+      description: "Your system preferences have been updated successfully.",
     });
   };
   
@@ -37,9 +76,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
+    <Layout>
       <PageTransition className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <header className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -67,18 +104,34 @@ const Settings = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input id="companyName" defaultValue="Acme Corporation" />
+                  <Label htmlFor="name">Company Name</Label>
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    value={companyInfo.name} 
+                    onChange={handleCompanyInfoChange} 
+                  />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="info@acmecorp.com" />
+                    <Input 
+                      id="email" 
+                      name="email" 
+                      type="email" 
+                      value={companyInfo.email}
+                      onChange={handleCompanyInfoChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" defaultValue="+1 (555) 123-4567" />
+                    <Input 
+                      id="phone" 
+                      name="phone" 
+                      value={companyInfo.phone}
+                      onChange={handleCompanyInfoChange}
+                    />
                   </div>
                 </div>
                 
@@ -86,14 +139,21 @@ const Settings = () => {
                   <Label htmlFor="address">Address</Label>
                   <Textarea
                     id="address"
+                    name="address"
                     rows={3}
-                    defaultValue="123 Business Ave, Suite 100, Enterprise City, EC 12345"
+                    value={companyInfo.address}
+                    onChange={handleCompanyInfoChange}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="taxId">Tax ID / VAT Number</Label>
-                  <Input id="taxId" defaultValue="US123456789" />
+                  <Input 
+                    id="taxId" 
+                    name="taxId" 
+                    value={companyInfo.taxId}
+                    onChange={handleCompanyInfoChange}
+                  />
                 </div>
               </CardContent>
               <CardFooter className="justify-end">
@@ -111,7 +171,10 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="dateFormat">Date Format</Label>
-                  <Select defaultValue="MM/DD/YYYY">
+                  <Select 
+                    value={systemPreferences.dateFormat}
+                    onValueChange={(value) => handleSystemPreferenceChange('dateFormat', value)}
+                  >
                     <SelectTrigger id="dateFormat">
                       <SelectValue placeholder="Select date format" />
                     </SelectTrigger>
@@ -125,7 +188,10 @@ const Settings = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="currency">Default Currency</Label>
-                  <Select defaultValue="USD">
+                  <Select 
+                    value={systemPreferences.currency}
+                    onValueChange={(value) => handleSystemPreferenceChange('currency', value)}
+                  >
                     <SelectTrigger id="currency">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
@@ -140,7 +206,10 @@ const Settings = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="language">System Language</Label>
-                  <Select defaultValue="en">
+                  <Select 
+                    value={systemPreferences.language}
+                    onValueChange={(value) => handleSystemPreferenceChange('language', value)}
+                  >
                     <SelectTrigger id="language">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
@@ -154,7 +223,7 @@ const Settings = () => {
                 </div>
               </CardContent>
               <CardFooter className="justify-end">
-                <Button onClick={handleSaveGeneral}>Save Changes</Button>
+                <Button onClick={handleSavePreferences}>Save Changes</Button>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -260,28 +329,51 @@ const Settings = () => {
                   <Label>Color Theme</Label>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="border-2 border-primary rounded-md p-1 cursor-pointer">
-                        <div className="h-20 w-32 bg-background rounded flex items-center justify-center">
-                          <div className="h-8 w-16 bg-primary rounded"></div>
-                        </div>
+                      <div 
+                        className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-main' ? 'border-primary' : 'border-muted'}`}
+                        onClick={() => changeBgTheme('bg-gradient-main')}
+                      >
+                        <div className="h-20 w-32 bg-gradient-main rounded"></div>
                       </div>
-                      <span className="text-sm">Light</span>
+                      <span className="text-sm">Default (Dark Purple)</span>
                     </div>
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="border-2 border-muted rounded-md p-1 cursor-pointer">
-                        <div className="h-20 w-32 bg-slate-900 rounded flex items-center justify-center">
-                          <div className="h-8 w-16 bg-primary rounded"></div>
-                        </div>
+                      <div 
+                        className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-purple' ? 'border-primary' : 'border-muted'}`}
+                        onClick={() => changeBgTheme('bg-gradient-purple')}
+                      >
+                        <div className="h-20 w-32 bg-gradient-purple rounded"></div>
                       </div>
-                      <span className="text-sm">Dark</span>
+                      <span className="text-sm">Vibrant Purple</span>
                     </div>
                     <div className="flex flex-col items-center space-y-2">
-                      <div className="border-2 border-muted rounded-md p-1 cursor-pointer">
-                        <div className="h-20 w-32 bg-gradient-to-r from-background to-slate-900 rounded flex items-center justify-center">
-                          <div className="h-8 w-16 bg-primary rounded"></div>
-                        </div>
+                      <div 
+                        className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-blue' ? 'border-primary' : 'border-muted'}`}
+                        onClick={() => changeBgTheme('bg-gradient-blue')}
+                      >
+                        <div className="h-20 w-32 bg-gradient-blue rounded"></div>
                       </div>
-                      <span className="text-sm">System</span>
+                      <span className="text-sm">Deep Blue</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div 
+                        className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-green' ? 'border-primary' : 'border-muted'}`}
+                        onClick={() => changeBgTheme('bg-gradient-green')}
+                      >
+                        <div className="h-20 w-32 bg-gradient-green rounded"></div>
+                      </div>
+                      <span className="text-sm">Forest Green</span>
+                    </div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <div 
+                        className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-orange' ? 'border-primary' : 'border-muted'}`}
+                        onClick={() => changeBgTheme('bg-gradient-orange')}
+                      >
+                        <div className="h-20 w-32 bg-gradient-orange rounded"></div>
+                      </div>
+                      <span className="text-sm">Sunset Orange</span>
                     </div>
                   </div>
                 </div>
@@ -321,7 +413,7 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </PageTransition>
-    </div>
+    </Layout>
   );
 };
 

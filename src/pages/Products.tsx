@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageTransition from '@/components/ui/PageTransition';
-import Navbar from '@/components/Navbar';
+import Layout from '@/components/Layout';
 import ProductsTable, { Product } from '@/components/Products/ProductsTable';
+import ProductsFilter from '@/components/Products/ProductsFilter';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -101,6 +101,7 @@ const initialProducts: Product[] = [
 const Products = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(initialProducts);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -112,6 +113,45 @@ const Products = () => {
     price: '',
     stock: '',
   });
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Apply filters
+  useEffect(() => {
+    let result = products;
+    
+    // Apply search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(search) || 
+        product.sku.toLowerCase().includes(search) ||
+        product.category.toLowerCase().includes(search)
+      );
+    }
+    
+    // Apply category filter
+    if (categoryFilter) {
+      result = result.filter(product => product.category === categoryFilter);
+    }
+    
+    // Apply status filter
+    if (statusFilter) {
+      result = result.filter(product => product.status === statusFilter);
+    }
+    
+    setFilteredProducts(result);
+  }, [products, searchTerm, categoryFilter, statusFilter]);
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('');
+    setStatusFilter('');
+  };
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,9 +258,7 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
+    <Layout>
       <PageTransition className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <header className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -231,8 +269,18 @@ const Products = () => {
           </div>
         </header>
         
+        <ProductsFilter 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          categoryFilter={categoryFilter}
+          onCategoryChange={setCategoryFilter}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          onResetFilters={handleResetFilters}
+        />
+        
         <ProductsTable 
-          products={products}
+          products={filteredProducts}
           onEdit={handleEditProduct}
           onDelete={handleDeleteInit}
           onAdd={handleAddProduct}
@@ -395,7 +443,7 @@ const Products = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Layout>
   );
 };
 

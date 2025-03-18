@@ -140,3 +140,24 @@
 .dark .hover-lift:hover {
   box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.3);
 }
+
+/* Custom background styles */
+.bg-gradient-main {
+  background: linear-gradient(to right, rgb(15, 23, 42), rgb(88, 28, 135), rgb(15, 23, 42));
+}
+
+.bg-gradient-purple {
+  background: linear-gradient(135deg, rgb(76, 29, 149), rgb(124, 58, 237));
+}
+
+.bg-gradient-blue {
+  background: linear-gradient(135deg, rgb(30, 58, 138), rgb(59, 130, 246));
+}
+
+.bg-gradient-green {
+  background: linear-gradient(135deg, rgb(6, 78, 59), rgb(5, 150, 105));
+}
+
+.bg-gradient-orange {
+  background: linear-gradient(135deg, rgb(154, 52, 18), rgb(251, 146, 60));
+}
