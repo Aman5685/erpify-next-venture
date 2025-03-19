@@ -5,7 +5,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter 
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ProductForm from './ProductForm';
@@ -26,19 +27,29 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
   onInputChange,
   onSave
 }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add new product</DialogTitle>
-        </DialogHeader>
-        <ProductForm formData={formData} onChange={onInputChange} />
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={onSave}>Add Product</Button>
-        </DialogFooter>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Add new product</DialogTitle>
+            <DialogDescription>
+              Fill in the details to add a new product to your inventory.
+            </DialogDescription>
+          </DialogHeader>
+          <ProductForm formData={formData} onChange={onInputChange} />
+          <DialogFooter className="mt-4">
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Add Product</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

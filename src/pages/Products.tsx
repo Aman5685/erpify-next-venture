@@ -29,8 +29,8 @@ const Products = () => {
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Apply filters
   useEffect(() => {
@@ -47,12 +47,12 @@ const Products = () => {
     }
     
     // Apply category filter
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== 'all') {
       result = result.filter(product => product.category === categoryFilter);
     }
     
     // Apply status filter
-    if (statusFilter) {
+    if (statusFilter && statusFilter !== 'all') {
       result = result.filter(product => product.status === statusFilter);
     }
     
@@ -62,8 +62,8 @@ const Products = () => {
   // Reset filters
   const handleResetFilters = () => {
     setSearchTerm('');
-    setCategoryFilter('');
-    setStatusFilter('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
   };
 
   // Handle form input changes

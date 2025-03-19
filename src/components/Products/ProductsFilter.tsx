@@ -49,7 +49,7 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="Electronics">Electronics</SelectItem>
               <SelectItem value="Furniture">Furniture</SelectItem>
               <SelectItem value="Accessories">Accessories</SelectItem>
@@ -61,7 +61,7 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="In Stock">In Stock</SelectItem>
               <SelectItem value="Low Stock">Low Stock</SelectItem>
               <SelectItem value="Out of Stock">Out of Stock</SelectItem>
