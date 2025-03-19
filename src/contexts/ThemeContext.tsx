@@ -7,7 +7,7 @@ type ThemeContextType = {
 };
 
 const defaultContext: ThemeContextType = {
-  bgTheme: 'bg-gradient-main',
+  bgTheme: 'bg-light-blue',
   changeBgTheme: () => {},
 };
 
@@ -17,7 +17,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [bgTheme, setBgTheme] = useState<string>(
-    localStorage.getItem('bgTheme') || 'bg-gradient-main'
+    localStorage.getItem('bgTheme') || 'bg-light-blue'
   );
 
   const changeBgTheme = (theme: string) => {
@@ -26,7 +26,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Apply the theme to the html element
     const html = document.documentElement;
-    html.className = html.className.replace(/bg-gradient-\w+/g, '').trim();
+    html.className = html.className
+      .replace(/bg-gradient-\w+/g, '')
+      .replace(/bg-light-blue/g, '')
+      .trim();
     html.classList.add(theme);
   };
 
@@ -35,13 +38,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (savedTheme) {
       setBgTheme(savedTheme);
       const html = document.documentElement;
-      html.className = html.className.replace(/bg-gradient-\w+/g, '').trim();
+      html.className = html.className
+        .replace(/bg-gradient-\w+/g, '')
+        .replace(/bg-light-blue/g, '')
+        .trim();
       html.classList.add(savedTheme);
     } else {
-      // If no saved theme, set default to bg-gradient-main
-      setBgTheme('bg-gradient-main');
-      localStorage.setItem('bgTheme', 'bg-gradient-main');
-      document.documentElement.classList.add('bg-gradient-main');
+      // If no saved theme, set default to bg-light-blue
+      setBgTheme('bg-light-blue');
+      localStorage.setItem('bgTheme', 'bg-light-blue');
+      document.documentElement.classList.add('bg-light-blue');
     }
   }, []);
 

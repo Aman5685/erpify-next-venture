@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import ProductForm from './ProductForm';
 import { ProductFormData } from './types';
+import { motion } from 'framer-motion';
 
 interface EditProductDialogProps {
   open: boolean;
@@ -35,21 +36,26 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
+        <motion.form 
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <DialogHeader>
-            <DialogTitle>Edit product</DialogTitle>
+            <DialogTitle className="text-xl">Edit Product</DialogTitle>
             <DialogDescription>
               Make changes to the product details below.
             </DialogDescription>
           </DialogHeader>
           <ProductForm formData={formData} onChange={onInputChange} />
-          <DialogFooter className="mt-4">
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="mt-6">
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)} className="mr-2">
               Cancel
             </Button>
             <Button type="submit">Update Product</Button>
           </DialogFooter>
-        </form>
+        </motion.form>
       </DialogContent>
     </Dialog>
   );

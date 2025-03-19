@@ -161,3 +161,8 @@
 .bg-gradient-orange {
   background: linear-gradient(135deg, rgb(154, 52, 18), rgb(251, 146, 60));
 }
+
+/* Add new solid background color */
+.bg-light-blue {
+  background-color: #F3F8FF;
+}

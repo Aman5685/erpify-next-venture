@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Layout from '@/components/Layout';
 import PageTransition from '@/components/ui/PageTransition';
@@ -327,7 +327,16 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Color Theme</Label>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div 
+                        className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-light-blue' ? 'border-primary' : 'border-muted'}`}
+                        onClick={() => changeBgTheme('bg-light-blue')}
+                      >
+                        <div className="h-20 w-32 bg-light-blue rounded"></div>
+                      </div>
+                      <span className="text-sm">Light Blue</span>
+                    </div>
                     <div className="flex flex-col items-center space-y-2">
                       <div 
                         className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-main' ? 'border-primary' : 'border-muted'}`}
@@ -355,8 +364,6 @@ const Settings = () => {
                       </div>
                       <span className="text-sm">Deep Blue</span>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
                     <div className="flex flex-col items-center space-y-2">
                       <div 
                         className={`border-2 rounded-md p-1 cursor-pointer transition-all ${bgTheme === 'bg-gradient-green' ? 'border-primary' : 'border-muted'}`}
